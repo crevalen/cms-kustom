@@ -19,7 +19,7 @@
 			allTags={data.allTags}
 			selectedCategories={data.post.categories}
 			selectedTags={data.post.tags}
-			apiKey={data.apiKey}
+			
 			existingImageUrl={data.post.featuredImageUrl}
 			ogTitle={data.post.ogTitle ?? ''}
     		ogDescription={data.post.ogDescription ?? ''}

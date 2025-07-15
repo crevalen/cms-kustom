@@ -11,7 +11,7 @@
 		<PostForm
 			allCategories={data.allCategories}
 			allTags={data.allTags}
-			apiKey={data.apiKey}
+			
 			{form}
 		/>
 	</main>

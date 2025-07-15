@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { error, fail, } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { Prisma } from '@prisma/client';
-import { TINYMCE_API_KEY } from '$env/static/private';
+
 import { uploadImage } from '$lib/server/r2';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -28,8 +28,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			featuredImageUrl: (post as any).featuredImage?.url
 		},
 		allCategories,
-		allTags,
-		apiKey: TINYMCE_API_KEY
+		allTags
+		
 	};
 };
 

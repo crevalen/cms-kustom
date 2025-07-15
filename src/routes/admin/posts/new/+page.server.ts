@@ -1,14 +1,13 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { TINYMCE_API_KEY } from '$env/static/private';
 import { uploadImage } from '$lib/server/r2';
 import { Prisma } from '@prisma/client';
 
 export const load: PageServerLoad = async () => {
 	const allCategories = await db.category.findMany({ orderBy: { name: 'asc' } });
 	const allTags = await db.tag.findMany({ orderBy: { name: 'asc' } });
-	return { apiKey: TINYMCE_API_KEY, allCategories, allTags };
+	return { allCategories, allTags };
 };
 
 export const actions: Actions = {
