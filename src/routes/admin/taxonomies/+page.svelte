@@ -41,6 +41,14 @@
 					<span class="rounded-full bg-blue-500/10 px-3 py-1 text-sm font-medium text-blue-300"
 						>{category.name}</span
 					>
+
+					<span class="flex items-center justify-between rounded-full bg-blue-500/10 px-3 py-1 text-sm font-medium text-blue-300">
+    {category.name}
+    <form method="POST" action="?/deleteCategory" use:enhance>
+        <input type="hidden" name="id" value={category.id} />
+        <button type="submit" class="ml-2 text-blue-300/50 hover:text-white">X</button>
+    </form>
+</span>
 				{/each}
 			</div>
 		</div>
@@ -68,6 +76,13 @@
 						class="rounded-full bg-purple-500/10 px-3 py-1 text-sm font-medium text-purple-300"
 						>{tag.name}</span
 					>
+					<span class="flex items-center justify-between rounded-full bg-purple-500/10 px-3 py-1 text-sm font-medium text-purple-300">
+    {tag.name}
+    <form method="POST" action="?/deleteTag" use:enhance>
+        <input type="hidden" name="id" value={tag.id} />
+        <button type="submit" class="ml-2 text-purple-300/50 hover:text-white">X</button>
+    </form>
+</span>
 				{/each}
 			</div>
 		</div>

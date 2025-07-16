@@ -5,7 +5,7 @@
 	import { CheckCircle, AlertTriangle, X as IconX, Plus } from 'lucide-svelte';
 	
 	type Taxonomy = { id: string; name: string };
-	type AnalysisResult = { text: string; status: 'good' | 'bad' | 'ok' };
+	
 
 	// Props
 	export let title = '';
@@ -39,10 +39,7 @@
 	let newTagName = '';
 	let categoryString: string;
 	let tagString: string;
-	let readabilityScore = 0;
-	let readabilityText = '...';
-	let readabilityColor = 'text-slate-400';
-	let analysisResults: AnalysisResult[] = [];
+	
 	// Logika Notifikasi
 	$: if (form) {
 		if (form.success && form.message) {
@@ -54,67 +51,7 @@
 		setTimeout(() => (notification = null), 4000);
 	}
 	
-	// --- FUNGSI-FUNGSI BARU UNTUK READABILITY KUSTOM ---
-	function countSyllables(word: string): number {
-		word = word.toLowerCase();
-		if (word.length <= 3) return 1;
-		word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
-		word = word.replace(/^y/, '');
-		const match = word.match(/[aeiouy]{1,2}/g);
-		return match ? match.length : 0;
-	}
 
-	function calculateFleschKincaid(text: string): number {
-		const words = text.match(/\b\w+\b/g) ?? [];
-		const sentences = text.match(/[^.!?]+[.!?]+/g) ?? [];
-		const totalWords = words.length;
-		const totalSentences = sentences.length;
-		if (totalWords === 0 || totalSentences === 0) return 0;
-		
-		let totalSyllables = 0;
-		for (const word of words) {
-			totalSyllables += countSyllables(word);
-		}
-		
-		const score = 206.835 - 1.015 * (totalWords / totalSentences) - 84.6 * (totalSyllables / totalWords);
-		return Math.max(0, Math.min(100, score)); // Pastikan skor antara 0 dan 100
-	}
-	
-	function interpretFleschKincaid(score: number): { text: string; color: string } {
-		if (score >= 90) return { text: 'Sangat Mudah Dibaca', color: 'text-green-400' };
-		if (score >= 70) return { text: 'Mudah Dibaca', color: 'text-green-400' };
-		if (score >= 60) return { text: 'Cukup Mudah Dibaca', color: 'text-yellow-400' };
-		if (score >= 50) return { text: 'Agak Sulit Dibaca', color: 'text-yellow-400' };
-		if (score >= 30) return { text: 'Sulit Dibaca', color: 'text-red-400' };
-		return { text: 'Sangat Sulit Dibaca', color: 'text-red-400' };
-	}
-	// Blok reaktif yang memanggil fungsi kustom kita
-	$: {
-		if (typeof content === 'string') {
-			const plainContent = content.replace(/<[^>]*>/g, ' ');
-
-			if (plainContent.trim().length > 10) {
-				readabilityScore = calculateFleschKincaid(plainContent);
-				const interpretation = interpretFleschKincaid(readabilityScore);
-				readabilityText = interpretation.text;
-				readabilityColor = interpretation.color;
-			}
-            
-            // Analisis SEO
-            const seoResults: AnalysisResult[] = [];
-            const keyword = focusKeyword.toLowerCase().trim();
-
-            if (keyword) {
-                seoResults.push({ text: 'Focus keyword di judul SEO', status: metaTitle.toLowerCase().includes(keyword) ? 'good' : 'bad' });
-                seoResults.push({ text: 'Focus keyword di meta description', status: metaDescription.toLowerCase().includes(keyword) ? 'good' : 'bad' });
-                seoResults.push({ text: 'Focus keyword di URL', status: slug.toLowerCase().includes(keyword.replace(/\s+/g, '-')) ? 'good' : 'bad' });
-				seoResults.push({ text: 'Focus keyword di awal konten', status: plainContent.substring(0, Math.floor(plainContent.length * 0.1)).includes(keyword) ? 'good' : 'bad' });
-            }
-            seoResults.push({ text: 'Panjang meta description (120-160)', status: metaDescription.length >= 120 && metaDescription.length <= 160 ? 'good' : (metaDescription.length > 0 ? 'ok' : 'bad') });
-            seoResults.push({ text: 'Panjang judul SEO (50-60)', status: metaTitle.length >= 50 && metaTitle.length <= 60 ? 'good' : (metaTitle.length > 0 ? 'ok' : 'bad') });
-            analysisResults = seoResults;
-		}
-	}
 	
 	// Logika lain-lain
 	$: categoryString = selectedCategories.map((c) => c.name).join(',');
@@ -199,7 +136,7 @@
                 <h3 class="mb-4 text-sm font-medium text-slate-400">Pratinjau di Google</h3>
                 <div class="font-sans">
                     <p class="text-sm text-slate-200">
-                        <span class="font-medium">situs-anda.com</span> › blog › {slug || '...'}
+                        <span class="font-medium">https://www.crevalen.xyz</span> › blog › {slug || '...'}
                     </p>
                     <h2 class="truncate text-xl text-blue-500 hover:underline">
                         {metaTitle || title || 'Judul Postingan Anda'}
@@ -305,35 +242,9 @@
 						<textarea id="metaDescription" name="metaDescription" rows="4" bind:value={metaDescription} class="w-full rounded-lg border-slate-700 bg-slate-900 p-3 text-sm"></textarea>
 					</div>
 				</div>
-				<div class="mt-6 border-t border-slate-700 pt-4">
-					<h4 class="mb-2 font-semibold text-slate-300">Analisis SEO Dasar</h4>
-					<ul class="space-y-2">
-						{#each analysisResults as result}
-							<li class="flex items-center gap-2 text-sm">
-								{#if result.status === 'good'}
-									<CheckCircle class="h-4 w-4 flex-shrink-0 text-green-400" />
-									<span class="text-slate-300">{result.text}</span>
-								{:else if result.status === 'bad'}
-									<IconX class="h-4 w-4 flex-shrink-0 text-red-400" />
-									<span class="text-slate-400">{result.text}</span>
-								{:else}
-									<AlertTriangle class="h-4 w-4 flex-shrink-0 text-yellow-400" />
-									<span class="text-slate-400">{result.text}</span>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				</div>
+				
 			</div>
-			<div class="rounded-lg border border-slate-800 bg-slate-800/50 p-6">
-				<h3 class="mb-4 font-semibold text-slate-200">Analisis Keterbacaan</h3>
-				<div class="flex items-center justify-between">
-					<span class="text-sm text-slate-400">Skor Flesch-Kincaid:</span>
-					<span class="font-bold {readabilityColor}">{readabilityScore.toFixed(1)}</span>
-				</div>
-				<div class="mt-2 text-center text-sm font-medium {readabilityColor}">{readabilityText}</div>
-				<div class="mt-4 text-xs text-slate-500">Skor lebih tinggi (mendekati 100) lebih mudah dipahami.</div>
-			</div>
+			
 
 			<div class="rounded-lg border border-slate-800 bg-slate-800/50 p-6">
     <h3 class="mb-4 font-semibold text-slate-200">Pengaturan Lanjutan</h3>

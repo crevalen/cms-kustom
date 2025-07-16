@@ -37,7 +37,9 @@
 					<tbody class="divide-y divide-slate-800 bg-slate-900">
 						{#each data.posts as post (post.id)}
 							<tr>
-								<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-100">{post.title}</td>
+								<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-slate-100 max-w-xs truncate" title={post.title}>
+    {post.title}
+</td>
 								<td class="whitespace-nowrap px-6 py-4 text-sm text-slate-400">{post.author.username}</td>
 								<td class="px-6 py-4 text-sm text-slate-400">
 									<div class="flex flex-wrap gap-1">

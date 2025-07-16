@@ -10,11 +10,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 			authorId: locals.user?.id
 		},
 		// Ambil juga data relasi untuk ditampilkan di tabel
-		include: {
-			author: true,
-			categories: true,
-			tags: true
-		},
+		select: {
+    id: true,
+    title: true,
+    slug: true,
+    published: true,
+    updatedAt: true,
+    author: { select: { username: true } },
+    categories: { select: { name: true } },
+    tags: { select: { name: true } }
+},
 		orderBy: {
 			createdAt: 'desc'
 		}

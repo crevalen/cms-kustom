@@ -39,5 +39,27 @@ export const actions: Actions = {
 			return fail(500, { error: 'Gagal membuat tag, mungkin sudah ada.' });
 		}
 		return { success: true };
+	},
+
+
+deleteCategory: async ({ request }) => {
+		const formData = await request.formData();
+		const id = formData.get('id') as string;
+		try {
+			await db.category.delete({ where: { id } });
+		} catch {
+			return fail(500, { message: 'Gagal menghapus kategori.' });
+		}
+		return { success: true };
+	},
+	deleteTag: async ({ request }) => {
+		const formData = await request.formData();
+		const id = formData.get('id') as string;
+		try {
+			await db.tag.delete({ where: { id } });
+		} catch {
+			return fail(500, { message: 'Gagal menghapus tag.' });
+		}
+		return { success: true };
 	}
 };
