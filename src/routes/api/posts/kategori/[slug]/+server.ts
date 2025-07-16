@@ -11,10 +11,19 @@ export const GET: RequestHandler = async ({ params }) => {
 		where: { slug },
 		include: {
 			posts: {
-				where: { published: true, publishedAt: { lte: new Date() } },
-				include: { featuredImage: true },
-				orderBy: { createdAt: 'desc' }
-			}
+    where: { published: true, publishedAt: { lte: new Date() } },
+    include: {
+        featuredImage: true,
+        categories: {         // <-- TAMBAHKAN BLOK INI
+            select: {
+                slug: true,
+                name: true
+            },
+            take: 1
+        }
+    },
+    orderBy: { createdAt: 'desc' }
+}
 		}
 	});
 
