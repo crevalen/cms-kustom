@@ -5,8 +5,7 @@ import type { Handle } from '@sveltejs/kit';
 
 // Daftar domain yang diizinkan untuk mengakses API kita
 // Untuk development, kita izinkan localhost. Nanti kita ganti dengan domain frontend Anda.
-const allowedOrigins = ['http://localhost:5174']; // Anggap saja frontend jalan di port 5174
-
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'https:www.crevalen.xyz']; 
 export const handle: Handle = async ({ event, resolve }) => {
 	// Logika Autentikasi yang sudah ada
 	const sessionId = event.cookies.get('session_id');
