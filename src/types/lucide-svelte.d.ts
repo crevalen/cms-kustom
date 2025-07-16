@@ -21,6 +21,7 @@ declare module 'lucide-svelte' {
 	export class ImageIcon extends SvelteComponent {}
 	export class MessageSquare extends SvelteComponent {}
 	export class XCircle extends SvelteComponent {}
+	export class Palette extends SvelteComponent {}
 	
 	// Ikon Baru untuk Dasbor
 	export class LayoutDashboard extends SvelteComponent {}

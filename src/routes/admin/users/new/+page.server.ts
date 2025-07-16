@@ -2,14 +2,9 @@
 
 import { db } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
+import type { Actions} from './$types';
 import { hashPassword } from '$lib/server/auth';
 import { Role } from '@prisma/client';
-
-// Kita tidak perlu load data apa pun untuk halaman baru
-export const load: PageServerLoad = async () => {
-	return {};
-};
 
 export const actions: Actions = {
 	default: async ({ request }) => {
@@ -18,34 +13,25 @@ export const actions: Actions = {
 		const password = formData.get('password') as string;
 		const role = formData.get('role') as Role;
 
-		// Validasi input
 		if (!username || username.length < 4) {
-			return fail(400, { error: 'Username minimal 4 karakter.' });
+			return fail(400, { success: false, message: 'Username minimal 4 karakter.' });
 		}
 		if (!password || password.length < 6) {
-			return fail(400, { error: 'Password minimal 6 karakter.' });
+			return fail(400, { success: false, message: 'Password minimal 6 karakter.' });
 		}
 		if (!role || !Object.values(Role).includes(role)) {
-			return fail(400, { error: 'Role tidak valid.' });
+			return fail(400, { success: false, message: 'Role tidak valid.' });
 		}
 
 		try {
-			// Hash password sebelum disimpan
 			const passwordHash = await hashPassword(password);
-
 			await db.user.create({
-				data: {
-					username,
-					passwordHash,
-					role
-				}
+				data: { username, passwordHash, role }
 			});
 		} catch {
-			// Menangani jika username sudah ada
-			return fail(500, { error: 'Username sudah digunakan.' });
+			return fail(500, { success: false, message: 'Username sudah digunakan.' });
 		}
 
-		// Arahkan kembali ke daftar pengguna setelah berhasil
 		throw redirect(302, '/admin/users');
 	}
 };

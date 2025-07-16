@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { LayoutDashboard, Newspaper, Tags, Image, Users, Settings, Bot, FileText, MessageSquare } from 'lucide-svelte';
+	import { LayoutDashboard, Newspaper, Tags, Image, Users, Settings, Bot, FileText, MessageSquare, Palette } from 'lucide-svelte';
 
 	const navLinks = [
 		{ href: '/admin', label: 'Dasbor', icon: LayoutDashboard },
@@ -11,6 +11,7 @@
 		{ href: '/admin/users', label: 'Pengguna', icon: Users },
 		{ href: '/admin/media', label: 'Media', icon: Image },
 		{ href: '/admin/settings/seo', label: 'Pengaturan SEO', icon: Settings },
+		{ href: '/admin/settings/general', label: 'Pengaturan Umum', icon: Palette },
 		{ href: '/admin/settings/robots', label: 'Robots.txt', icon: Bot }
 	];
 </script>

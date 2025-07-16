@@ -1,10 +1,11 @@
 // src/routes/admin/users/[userId]/edit/+page.server.ts
 
 import { db } from '$lib/server/db';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { Role } from '@prisma/client';
+import { Role, Prisma } from '@prisma/client';
 import { hashPassword } from '$lib/server/auth';
+import { uploadImage } from '$lib/server/r2';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const user = await db.user.findUnique({
@@ -22,26 +23,36 @@ export const actions: Actions = {
 		const username = formData.get('username') as string;
 		const password = formData.get('password') as string;
 		const role = formData.get('role') as Role;
+		const displayName = formData.get('displayName') as string;
+		const bio = formData.get('bio') as string;
+		const avatarFile = formData.get('avatar') as File;
 
+		// Validasi
 		if (!username || username.length < 4) {
-			return fail(400, { error: 'Username minimal 4 karakter.' });
+			return fail(400, { success: false, message: 'Username minimal 4 karakter.' });
 		}
 		if (!role || !Object.values(Role).includes(role)) {
-			return fail(400, { error: 'Role tidak valid.' });
+			return fail(400, { success: false, message: 'Role tidak valid.' });
 		}
 
 		try {
-			const dataToUpdate: { username: string; role: Role; passwordHash?: string } = {
+			const dataToUpdate: Prisma.UserUpdateInput = {
 				username,
-				role
+				role,
+				displayName,
+				bio
 			};
 
-			// Hanya update password jika diisi
 			if (password && password.length > 0) {
 				if (password.length < 6) {
-					return fail(400, { error: 'Password baru minimal 6 karakter.' });
+					return fail(400, { success: false, message: 'Password baru minimal 6 karakter.' });
 				}
 				dataToUpdate.passwordHash = await hashPassword(password);
+			}
+
+			if (avatarFile && avatarFile.size > 0) {
+				const newAvatar = await uploadImage(avatarFile);
+				dataToUpdate.avatarUrl = newAvatar.url;
 			}
 
 			await db.user.update({
@@ -49,8 +60,9 @@ export const actions: Actions = {
 				data: dataToUpdate
 			});
 		} catch {
-			return fail(500, { error: 'Username mungkin sudah digunakan.' });
+			return fail(500, { success: false, message: 'Username mungkin sudah digunakan.' });
 		}
-		throw redirect(302, '/admin/users');
+
+		return { success: true, message: 'Profil pengguna berhasil diperbarui!' };
 	}
 };

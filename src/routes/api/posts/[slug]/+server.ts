@@ -35,7 +35,13 @@ export const GET: RequestHandler = async ({ params }) => {
 			publishedAt: { lte: new Date() } // <-- Sekarang ini valid
 		},
 		include: {
-			author: { select: { username: true } },
+			author: {
+				select: {
+					username: true,
+					displayName: true,
+					avatarUrl: true
+				}
+			},
 			featuredImage: true,
 			ogImage: true, // <-- Sertakan juga ogImage
 			categories: true,
@@ -89,7 +95,8 @@ export const GET: RequestHandler = async ({ params }) => {
 		datePublished: post.createdAt.toISOString(),
 		dateModified: post.updatedAt.toISOString(),
 		// PERBAIKAN: Akses relasi author
-		author: { '@type': 'Person', name: post.author.username },
+		author: { '@type': 'Person', name: post.author.displayName || post.author.username
+		},
 		publisher: {
 			'@type': 'Organization',
 			name: settingsMap.publisher_name || siteTitle,
