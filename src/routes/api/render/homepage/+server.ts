@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import he from 'he';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('page') ?? '1');
@@ -55,7 +56,8 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	const contentForExcerpt = featuredPost.content || '';
 	const plainTextContent = contentForExcerpt.replace(/<[^>]*>/g, '');
-	const excerpt = plainTextContent.substring(0, 150) + (plainTextContent.length > 150 ? '...' : '');
+	const decodedText = he.decode(plainTextContent); 
+	const excerpt = decodedText.substring(0, 150) + (decodedText.length > 150 ? '...' : '');
 	
 	const totalPages = Math.ceil(totalPosts / limit);
 
