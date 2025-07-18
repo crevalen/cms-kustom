@@ -4,8 +4,7 @@ import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	// Ambil semua data statistik secara paralel untuk efisiensi
-	const [postStats, categoryCount, tagCount, totalComments, pendingComments, recentPosts] =
+	const [postStats, categoryCount, tagCount, totalComments, pendingComments, popularPosts] =
 		await Promise.all([
 			db.post.aggregate({
 				where: { authorId: locals.user?.id },
@@ -14,12 +13,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}),
 			db.category.count(),
 			db.tag.count(),
-			db.comment.count(), // <-- Hitung semua komentar
-			db.comment.count({ where: { isApproved: false } }), // <-- Hitung komentar pending
+			db.comment.count(),
+			db.comment.count({ where: { isApproved: false } }),
+			// Ambil 5 postingan paling populer berdasarkan viewCount
 			db.post.findMany({
 				where: { authorId: locals.user?.id },
+				orderBy: { viewCount: 'desc' },
 				take: 5,
-				orderBy: { createdAt: 'desc' }
+				select: {
+					title: true,
+					slug: true,
+					viewCount: true
+				}
 			})
 		]);
 
@@ -33,6 +38,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			comments: totalComments,
 			pendingComments: pendingComments
 		},
-		recentPosts
+		popularPosts // Kirim data postingan populer ke halaman
 	};
 };
