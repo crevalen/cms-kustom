@@ -15,9 +15,11 @@ export const GET: RequestHandler = async ({ url }) => {
 	] = await Promise.all([
 		db.post.findFirst({
 			where: { published: true },
-			// PERBAIKAN: Urutkan berdasarkan 'createdAt' yang lebih andal
-			orderBy: { createdAt: 'desc' }, 
-			include: { categories: { take: 1 }, featuredImage: true, content: true }
+			orderBy: { createdAt: 'desc' },
+			include: { // 'content' sudah otomatis terpanggil, jadi kita hapus dari sini
+				categories: { take: 1 },
+				featuredImage: true
+			}
 		}),
 		db.post.findMany({
 			where: { published: true },
@@ -27,14 +29,14 @@ export const GET: RequestHandler = async ({ url }) => {
 		}),
 		db.post.findMany({
 			where: { published: true, categories: { some: { slug: 'tips' } } },
-			orderBy: { createdAt: 'desc' }, // Ganti ke createdAt juga
+			orderBy: { createdAt: 'desc' },
 			take: 6,
 			include: { categories: { take: 1 }, featuredImage: true }
 		}),
 		db.post.count({ where: { published: true } }),
 		db.post.findMany({
 			where: { published: true },
-			orderBy: { createdAt: 'desc' }, // Ganti ke createdAt juga
+			orderBy: { createdAt: 'desc' },
 			skip: (page - 1) * limit,
 			take: limit,
 			include: { categories: { take: 1 }, author: true, featuredImage: true }
@@ -51,7 +53,6 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 	}
 
-	// Logika excerpt yang lebih aman
 	const contentForExcerpt = featuredPost.content || '';
 	const plainTextContent = contentForExcerpt.replace(/<[^>]*>/g, '');
 	const excerpt = plainTextContent.substring(0, 150) + (plainTextContent.length > 150 ? '...' : '');
