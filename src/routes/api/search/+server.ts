@@ -31,9 +31,19 @@ export const GET: RequestHandler = async ({ url }) => {
 		include: {
 			featuredImage: true,
 			categories: {
-				select: { slug: true },
+				select: {
+					slug: true,
+					name: true // <-- TAMBAHKAN NAMA KATEGORI
+				},
 				take: 1
 			}
+		},
+		select: { // <-- Ganti 'include' menjadi 'select' untuk performa
+			slug: true,
+			title: true,
+			publishedAt: true, // <-- TAMBAHKAN TANGGAL PUBLIKASI
+			featuredImage: true,
+			categories: true
 		},
 		orderBy: {
 			createdAt: 'desc'
