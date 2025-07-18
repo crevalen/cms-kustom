@@ -5,6 +5,8 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async ({ url }) => {
 	const page = Number(url.searchParams.get('page') ?? '1');
 	const limit = 10; // Jumlah artikel per halaman untuk daftar utama
+	const plainTextContent = featuredPost?.content.replace(/<[^>]*>/g, '') || '';
+	const excerpt = plainTextContent.substring(0, 150) + (plainTextContent.length > 150 ? '...' : '');
 
 	// Ambil semua data yang dibutuhkan secara bersamaan
 	const [
@@ -56,7 +58,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const totalPages = Math.ceil(totalPosts / limit);
 
 	return json({
-		featuredPost,
+		featuredPost: featuredPost ? { ...featuredPost, excerpt } : null, 
 		popularPosts,
 		gridPosts: gridPostsFromTips, // Kembalikan sebagai gridPosts
 		paginatedPosts,
