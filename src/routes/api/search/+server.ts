@@ -3,23 +3,32 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
-	// Ambil kata kunci 'q' dari URL, contoh: /api/search?q=sveltekit
 	const query = url.searchParams.get('q');
 
 	if (!query) {
-		return json({ posts: [] }); // Kembalikan array kosong jika tidak ada query
+		return json({ posts: [] });
 	}
 
-	// Cari postingan di database
 	const posts = await db.post.findMany({
 		where: {
 			published: true,
-			OR: [ // Cari di beberapa kolom sekaligus
-				{ title: { contains: query, mode: 'insensitive' } }, // Cari di judul
-				{ content: { contains: query, mode: 'insensitive' } }, // Cari di konten
+			// PERUBAHAN: Mencari di 4 tempat, bukan 2
+			OR: [
+				{ title: { contains: query, mode: 'insensitive' } },      // 1. Cari di Judul
+				{ content: { contains: query, mode: 'insensitive' } },    // 2. Cari di Konten
+				{ 
+					tags: {                                               // 3. Cari di Tags
+						some: { name: { contains: query, mode: 'insensitive' } } 
+					} 
+				},
+				{ 
+					categories: {                                         // 4. Cari di Kategori
+						some: { name: { contains: query, mode: 'insensitive' } } 
+					} 
+				}
 			]
 		},
-		include: { // Sertakan data yang dibutuhkan oleh PostCard
+		include: {
 			featuredImage: true,
 			categories: {
 				select: { slug: true },
