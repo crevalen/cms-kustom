@@ -32,19 +32,13 @@ export const GET: RequestHandler = async ({ params }) => {
 		where: {
 			slug: params.slug,
 			published: true,
-			publishedAt: { lte: new Date() } // <-- Sekarang ini valid
+			publishedAt: { lte: new Date() }
 		},
 		include: {
-			author: {
-				select: {
-					username: true,
-					displayName: true,
-					avatarUrl: true
-				}
-			},
+			author: { select: { username: true, displayName: true, avatarUrl: true } },
 			featuredImage: true,
-			ogImage: true, // <-- Sertakan juga ogImage
-			categories: true,
+			ogImage: true,
+			categories: { take: 1 }, // Ambil kategori pertama saja
 			tags: true
 		}
 	});
@@ -64,8 +58,13 @@ export const GET: RequestHandler = async ({ params }) => {
 		{}
 	);
 
-	const contentHtml = await marked.parse(post.content);
+	// --- PERBAIKAN LOGIKA URL DI SINI ---
+	const primaryCategory = post.categories[0];
+	const postPath = primaryCategory ? `/${primaryCategory.slug}/${post.slug}` : `/blog/${post.slug}`;
+	const finalUrl = `${PUBLIC_SITE_URL}${postPath}`;
+	// ------------------------------------
 
+	const contentHtml = await marked.parse(post.content);
 	const siteTitle = settingsMap.site_title || 'Blog Keren';
 	const titleTemplate = settingsMap.post_title_template || '%post_title% | %site_title%';
 	const finalTitle =
@@ -78,9 +77,8 @@ export const GET: RequestHandler = async ({ params }) => {
 		description: finalDescription,
 		ogTitle: post.ogTitle || finalTitle,
 		ogDescription: post.ogDescription || finalDescription,
-		// PERBAIKAN: Gunakan relasi ogImage, bukan ogImageUrl
 		ogImage: post.ogImage?.url || post.featuredImage?.url || '',
-		canonical: post.canonicalUrl || `${PUBLIC_SITE_URL}/blog/${post.slug}`,
+		canonical: post.canonicalUrl || finalUrl, // Gunakan finalUrl
 		robots: `${post.noIndex ? 'noindex' : 'index'},${post.noFollow ? 'nofollow' : 'follow'}`
 	};
 
@@ -90,19 +88,16 @@ export const GET: RequestHandler = async ({ params }) => {
 		'@type': schemaType,
 		headline: post.metaTitle || post.title,
 		description: finalDescription,
-		// PERBAIKAN: Akses relasi featuredImage
 		image: post.featuredImage?.url || '',
 		datePublished: post.createdAt.toISOString(),
 		dateModified: post.updatedAt.toISOString(),
-		// PERBAIKAN: Akses relasi author
-		author: { '@type': 'Person', name: post.author.displayName || post.author.username
-		},
+		author: { '@type': 'Person', name: post.author.displayName || post.author.username },
 		publisher: {
 			'@type': 'Organization',
 			name: settingsMap.publisher_name || siteTitle,
 			logo: { '@type': 'ImageObject', url: settingsMap.publisher_logo_url || '' }
 		},
-		mainEntityOfPage: { '@type': 'WebPage', '@id': `${PUBLIC_SITE_URL}/blog/${post.slug}` }
+		mainEntityOfPage: { '@type': 'WebPage', '@id': finalUrl } // Gunakan finalUrl
 	};
 
 	if (schemaType === 'FAQPage') {
