@@ -5,22 +5,24 @@ import type { RequestHandler } from './$types';
 export const GET: RequestHandler = async () => {
 	const posts = await db.post.findMany({
 		where: { published: true },
-		include: {
-			featuredImage: true,
+		// Kita perbaiki struktur 'select' di sini
+		select: {
+			slug: true,
+			title: true,
+			publishedAt: true,
 			categories: {
 				select: {
 					slug: true,
-					name: true // <-- TAMBAHKAN NAMA KATEGORI
+					name: true
 				},
 				take: 1
+			},
+			// PERBAIKAN: Secara eksplisit minta 'url' dari 'featuredImage'
+			featuredImage: {
+				select: {
+					url: true
+				}
 			}
-		},
-		select: { // <-- Ganti 'include' menjadi 'select' untuk performa
-			slug: true,
-			title: true,
-			publishedAt: true, // <-- TAMBAHKAN TANGGAL PUBLIKASI
-			featuredImage: true,
-			categories: true
 		},
 		orderBy: {
 			createdAt: 'desc'
