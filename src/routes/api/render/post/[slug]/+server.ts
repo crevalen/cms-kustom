@@ -30,20 +30,28 @@ export const GET: RequestHandler = async ({ params }) => {
 	// 2. Ambil Data Tambahan (Komentar & Post Terkait)
 	const [comments, relatedPosts, settings] = await Promise.all([
 		db.comment.findMany({
-			where: { postId: post.id, isApproved: true, parentId: null }, // Ambil komentar utama
-			include: { replies: true }, // Sertakan balasan
+			where: { postId: post.id, isApproved: true, parentId: null },
+			include: { replies: true },
 			orderBy: { createdAt: 'asc' }
 		}),
+		// --- PERBAIKAN DI SINI ---
 		db.post.findMany({
 			where: {
 				published: true,
-				publishedAt: { lte: new Date() },
 				id: { not: post.id },
 				categories: { some: { id: post.categories[0]?.id } }
 			},
-			include: { featuredImage: true },
-			take: 3
+			// 1. Ganti 'include' menjadi 'select' untuk data yang lebih spesifik
+			select: {
+				slug: true,
+				title: true,
+				publishedAt: true, 
+				featuredImage: { select: { url: true } },
+				categories: { select: { slug: true, name: true }, take: 1 } 
+			},
+			take: 4 
 		}),
+		// --- SELESAI PERBAIKAN ---
 		db.setting.findMany({
 			where: { key: { in: ['site_title', 'post_title_template', 'publisher_name', 'publisher_logo_url'] } }
 		})

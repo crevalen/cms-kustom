@@ -11,6 +11,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		featuredPost,
 		popularPosts,
 		gridPosts,
+		storyPosts,
 		totalPosts,
 		paginatedPosts
 	] = await Promise.all([
@@ -32,6 +33,13 @@ export const GET: RequestHandler = async ({ url }) => {
 			where: { published: true, categories: { some: { slug: 'tips' } } },
 			orderBy: { createdAt: 'desc' },
 			take: 6,
+			include: { categories: { take: 1 }, featuredImage: true }
+		}),
+
+		db.post.findMany({
+			where: { published: true, categories: { some: { slug: 'story' } } },
+			orderBy: { createdAt: 'desc' },
+			take: 4,
 			include: { categories: { take: 1 }, featuredImage: true }
 		}),
 		db.post.count({ where: { published: true } }),
@@ -65,6 +73,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		featuredPost: { ...featuredPost, excerpt },
 		popularPosts,
 		gridPosts,
+		storyPosts,
 		paginatedPosts,
 		pagination: {
 			currentPage: page,
