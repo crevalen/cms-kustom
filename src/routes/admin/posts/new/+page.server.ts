@@ -3,6 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { uploadImage } from '$lib/server/r2';
 import { Prisma } from '@prisma/client';
+import { sendNotificationToAll } from '$lib/server/notifications';
 
 export const load: PageServerLoad = async () => {
 	const allCategories = await db.category.findMany({ orderBy: { name: 'asc' } });
@@ -45,17 +46,28 @@ export const actions: Actions = {
 			const categoryConnectOrCreate = categoryNames.map((name) => ({ where: { name }, create: { name, slug: name.toLowerCase().replace(/\s+/g, '-') } }));
 			const tagConnectOrCreate = tagNames.map((name) => ({ where: { name }, create: { name, slug: name.toLowerCase().replace(/\s+/g, '-') } }));
 
-			await db.post.create({
+			const newPost = await db.post.create({
 				data: {
 					title, slug, content, metaTitle, metaDescription, focusKeyword,
-					published, // <-- PERBAIKAN DI SINI
+					published,
 					publishedAt: publishedAtString ? new Date(publishedAtString) : new Date(),
 					authorId: locals.user.id,
 					featuredImageId: featuredImageId,
 					categories: { connectOrCreate: categoryConnectOrCreate },
 					tags: { connectOrCreate: tagConnectOrCreate }
+				},
+				// Sertakan data relasi yang dibutuhkan oleh fungsi notifikasi
+				include: {
+					featuredImage: true,
+					categories: true
 				}
 			});
+
+			// 3. Panggil fungsi untuk mengirim notifikasi jika post di-publish
+			if (newPost.published) {
+				await sendNotificationToAll(newPost);
+			}
+
 		} catch (e) {
 			if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
 				return fail(400, { error: `Slug "${slug}" sudah digunakan.` });

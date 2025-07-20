@@ -1,9 +1,6 @@
-// prisma/schema.prisma
-
 generator client {
-  provider = "prisma-client-js"
-  engineType = "library" 
-  
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -12,23 +9,16 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  ADMIN
-  EDITOR
-  AUTHOR
-}
-
 model User {
   id           String    @id @default(cuid())
   username     String    @unique
   passwordHash String
   role         Role      @default(AUTHOR)
-  displayName  String?
   avatarUrl    String?
-  bio          String?   @db.Text
+  bio          String?
+  displayName  String?
   posts        Post[]
   sessions     Session[]
-  
 }
 
 model Session {
@@ -38,79 +28,67 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// -- MODEL BARU & UPDATE --
-
 model Post {
-  id    String @id @default(cuid())
-  slug  String @unique
-  title String
-  content String @db.Text
-  published Boolean @default(false)
-
-  // Kolom SEO
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  title           String
+  content         String
+  published       Boolean    @default(false)
   metaTitle       String?
   metaDescription String?
   focusKeyword    String?
-  
-  // Kolom SEO Lanjutan
   ogTitle         String?
   ogDescription   String?
   canonicalUrl    String?
-  noIndex         Boolean @default(false)
-  noFollow        Boolean @default(false)
+  noIndex         Boolean    @default(false)
+  noFollow        Boolean    @default(false)
   schemaType      String?
-  publishedAt     DateTime? // <-- Field yang hilang ada di sini
-  viewCount       Int      @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relasi
-  author          User        @relation(fields: [authorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  publishedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
   authorId        String
-  categories      Category[]
-  tags            Tag[]
+  featuredImageId String?    @unique
+  ogImageId       String?    @unique
+  viewCount       Int        @default(0)
   comments        Comment[]
-  featuredImage   Media?      @relation("PostToFeaturedImage", fields: [featuredImageId], references: [id], onDelete: SetNull)
-  featuredImageId String?     @unique
-  ogImage         Media?      @relation("PostToOgImage", fields: [ogImageId], references: [id], onDelete: SetNull)
-  ogImageId       String?     @unique
+  author          User       @relation(fields: [authorId], references: [id])
+  featuredImage   Media?     @relation("PostToFeaturedImage", fields: [featuredImageId], references: [id])
+  ogImage         Media?     @relation("PostToOgImage", fields: [ogImageId], references: [id])
+  categories      Category[] @relation("CategoryToPost")
+  tags            Tag[]      @relation("PostToTag")
 }
 
 model Category {
-  id    String @id @default(cuid())
-  slug  String @unique
-  name  String @unique
-  posts Post[]
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String   @unique
   updatedAt DateTime @default(now()) @updatedAt
+  posts     Post[]   @relation("CategoryToPost")
 }
 
 model Tag {
-  id    String @id @default(cuid())
-  slug  String @unique
-  name  String @unique
-  posts Post[]
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String   @unique
   updatedAt DateTime @default(now()) @updatedAt
+  posts     Post[]   @relation("PostToTag")
 }
 
 model Media {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  url       String   @unique
-  altText   String?
-  fileType  String
-  size      Int
-  createdAt DateTime @default(now())
-
-  // Relasi balik yang disesuaikan
-  PostAsFeaturedImage Post? @relation("PostToFeaturedImage")
-  PostAsOgImage       Post? @relation("PostToOgImage")
+  id                  String   @id @default(cuid())
+  key                 String   @unique
+  url                 String   @unique
+  altText             String?
+  fileType            String
+  size                Int
+  createdAt           DateTime @default(now())
+  PostAsFeaturedImage Post?    @relation("PostToFeaturedImage")
+  PostAsOgImage       Post?    @relation("PostToOgImage")
 }
 
-// MODEL BARU UNTUK PENGATURAN
 model Setting {
-  key      String @id
-  value    String @db.Text
+  key       String   @id
+  value     String
   updatedAt DateTime @updatedAt
 }
 
@@ -118,29 +96,39 @@ model Page {
   id              String   @id @default(cuid())
   slug            String   @unique
   title           String
-  content         String   @db.Text
+  content         String
   published       Boolean  @default(false)
   metaTitle       String?
   metaDescription String?
-  schemaType      String? 
+  schemaType      String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
 
 model Comment {
-  id          String   @id @default(cuid())
-  content     String   @db.Text
+  id          String    @id @default(cuid())
+  content     String
   authorName  String
   authorEmail String
-  isApproved  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isApproved  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  postId      String
+  parentId    String?
+  parent      Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+  post        Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
 
-  // Relasi ke Postingan
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId String
+enum Role {
+  ADMIN
+  EDITOR
+  AUTHOR
+}
 
-  // Relasi untuk balasan (nested comments)
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId String?
-  replies  Comment[] @relation("CommentReplies")
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }
