@@ -1,6 +1,7 @@
 import webpush from 'web-push';
 import { db } from '$lib/server/db';
-import { PUBLIC_VAPID_KEY, PRIVATE_VAPID_KEY, VAPID_SUBJECT } from '$env/static/private';
+import { PUBLIC_VAPID_KEY } from '$env/static/public';
+import { PRIVATE_VAPID_KEY, VAPID_SUBJECT } from '$env/static/private';
 import type { Post, Media, Category } from '@prisma/client';
 
 // Gabungkan tipe Post dengan relasinya agar tidak error
